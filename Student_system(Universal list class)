@@ -1,0 +1,404 @@
+#include<iostream>
+#include<string>
+using namespace std;
+
+//泛节点的定义
+template<typename T>
+class dnode{
+    public:
+    T data;
+    dnode* prior;
+    dnode* next;
+
+    dnode(): prior(nullptr),next(nullptr),data(T()){};
+    dnode(T a): prior(nullptr),next(nullptr),data(a){};   //节点的生成
+};
+
+//泛链表的定义
+template<typename T>
+class dlist{
+    public:
+    dnode<T>* head;     //头和尾为节点
+    dnode<T>* end;
+    int size;
+
+    dlist(): head(nullptr),end(nullptr),size(0){};        //链表的生成
+    ~dlist();                                            //链表的析构
+
+    void insert_head(T a);           //头插入
+    void insert_end(T a);            //尾插入
+    void insert_before(string data,T a);      //前插入
+    void insert_after(string data,T a);       //后插入
+
+    void delete_head();      //头删除
+    void delete_end();       //尾删除
+    void delete_middle(string a);   //中删除
+    
+    void print_all();       //全查找
+    void print_single(string a);    //单查找
+};
+
+//泛链表的实现（插入篇）
+template<typename T>
+dlist<T>::~dlist(){
+    dnode<T>*p = head;
+    while(p != nullptr){
+        dnode<T>*q = p->next;
+        delete p;
+        p=q;
+    }
+    head=end=nullptr;
+    size=0;
+}
+template<typename T>
+void dlist<T>::insert_head(T a){
+    dnode<T>* newnode=new dnode<T>(a);    //申请堆空间（如果是栈，函数使用后栈会被删除失效）
+    
+    if(end==nullptr){
+        end=newnode;              //作用：添加链表的第一个元素时，end开始为nullptr，让其指向newnode；
+        head=newnode;
+        size++;
+        return;
+    }
+
+    newnode->next=head;
+    head->prior=newnode;             //涉及指针移动
+    head=newnode;                    //豆子请画图仔细理解
+    
+    size++;
+}
+template<typename T>
+void dlist<T>::insert_end(T a){
+    dnode<T>* newnode=new dnode<T>(a);
+
+    if(end==nullptr){
+        end=newnode;              
+        head=newnode;
+        size++;
+        return;
+    }
+
+    newnode->prior=end;
+    end->next=newnode;
+    end=newnode;
+
+    size++;
+}
+template<typename T>
+void dlist<T>::insert_before(string data,T a){
+    dnode<T>* p=head;
+    while(p!=nullptr){
+        if(p->data.get_id()==data){
+            cout<<"查找成功，前插完成"<<endl;
+            dnode<T>* newnode=new dnode<T>(a);
+
+            newnode->next=p;
+            p->prior=newnode;
+            newnode->prior=(p->prior);
+            if(p->prior!=nullptr){p->prior->next=newnode;}      //if防止对第一位前插导致越界
+
+            if(newnode->prior==nullptr){head=newnode;}        //if让第一位前插更新head
+            size++;
+            return;
+        }
+        p=p->next;
+    }
+    cout<<"对不起，查找失败，无法前插"<<endl;
+}
+template<typename T>
+void dlist<T>::insert_after(string data,T a){
+    dnode<T>* p=head;
+    while(p!=nullptr){
+        if(p->data.get_id()==data){
+            cout<<"查找成功，后插完成"<<endl;
+            dnode<T>* newnode=new dnode<T>(a);
+
+            newnode->next=(p->next);
+            if(p->next!=nullptr){(p->next)->prior=newnode;}     //if防止对最后一位尾插导致越界
+            newnode->prior=p;
+            p->next=newnode;
+
+            if(newnode->next==nullptr){end=newnode;}       //if让第一位尾插更新end
+            size++;
+            return;
+        }
+        p=p->next;
+    }
+    cout<<"对不起，查找失败，无法后插"<<endl;
+}
+
+//泛链表的实现（删除篇）
+template<typename T>
+void dlist<T>::delete_head(){
+    dnode<T>* p=head;
+    if(head==nullptr){return;}   //防止空链表
+
+    head=head->next;
+    if(head!=nullptr){head->prior=nullptr;}    //如果新头不为空，则新头前指针置空
+    delete p;
+    size--;
+    cout<<"删除成功"<<endl;
+}
+template<typename T>
+void dlist<T>::delete_end(){
+    dnode<T>*p=end;
+    if(end==nullptr) return;   //防止空链表
+
+    end=end->prior;
+    if(end!=nullptr){end->next=nullptr;}     //如果新尾不为空，则新尾后指针置空
+    delete p;
+    size--;
+    cout<<"删除成功"<<endl;
+}
+template<typename T>
+void dlist<T>::delete_middle(string a){
+    dnode<T>* p=head;
+    while(p!=nullptr){
+        if(p->data.get_id()==a){
+            if(p->prior!=nullptr){p->prior->next=p->next;}    //前节点指向后节点
+            if(p->next!=nullptr){p->next->prior=p->prior;}   //后节点指向前节点
+
+            delete p;
+            size--;
+            cout<<"删除成功"<<endl;
+            return;
+        }
+        p=p->next;
+    }
+    cout<<"对不起，查询失败，无法删除"<<endl;
+}
+
+//泛列表的实现（查找篇）
+template<typename T>
+void dlist<T>::print_all(){
+    dnode<T>* p=head;
+    while(p!=nullptr){
+        cout<<p->data<<endl;
+        p=p->next;
+    }
+    cout<<endl;
+    cout<<"=====全查找完成====="<<endl;
+}
+template<typename T>
+void dlist<T>::print_single(string a){
+    dnode<T>* p=head;
+    while(p!=nullptr){
+        if(p->data.get_id()==a){
+            cout<<"=====单查找成功====="<<endl;
+            cout<<p->data<<endl;
+            return;
+        }
+        p=p->next;
+    }
+    cout<<"=====单查找失败====="<<endl;
+}
+
+//学生类的声明
+class student{
+    private:
+    int score;
+    string name;
+    string id;
+
+    public:
+    student():score(0),name("NULL"),id("0000"){};
+    student(int a,string b,string c):score(a),name(b),id(c){};
+    friend ostream& operator<<(ostream& out,student a);
+    string get_id()const{return id;}
+};
+
+//学生类的实现
+ostream& operator<<(ostream& out,student a){
+    out<<endl;
+    out<<"==============="<<endl;
+    out<<"学生姓名:"<<a.name<<endl;
+    out<<"学生ID:"<<a.id<<endl;
+    out<<"学生分数:"<<a.score<<endl;
+    out<<"==============="<<endl;
+    out<<endl;
+    return out;
+}
+
+int main(){
+    using student_node=dnode<student>;
+    using student_list=dlist<student>;
+    student_list my_list;
+
+    int w=1;
+    while(w){
+        cout<<"=====欢迎使用巴豆的学生双向链表系统====="<<endl;
+        cout<<"增加学生请按1"<<endl;
+        cout<<"删除学生请按2"<<endl;
+        cout<<"查询学生请按3"<<endl;
+        cout<<"退出系统请按0"<<endl;
+        cin>>w;
+        switch(w){
+            case 1:{
+                int w1=1;
+                int a;
+                string b,c;
+
+                cout<<"请输入新增学生姓名"<<endl;
+                cin>>b;
+                cout<<"请输入新增学生ID"<<endl;
+                cin>>c;
+                cout<<"请输入新增学生得分"<<endl;
+                cin>>a;
+                student tem(a,b,c);
+                
+                cin.get();
+                cout<<"按回车进入插入学生界面"<<endl;
+                cin.get();
+
+                while(w1){
+                    cout<<"=====插入学生界面====="<<endl;
+                    cout<<"头插学生请按1"<<endl;
+                    cout<<"尾插学生请按2"<<endl;
+                    cout<<"前插学生请按3"<<endl;
+                    cout<<"后插学生请按4"<<endl;
+                    cout<<"返回上一级请按0"<<endl;
+                    cin>>w1;
+                    switch(w1){
+                        case 1:{
+                            my_list.insert_head(tem);
+                            cin.get();
+                            cout<<"按回车继续"<<endl;
+                            cin.get();
+                            system("clear");
+                            break;
+                        }
+                        case 2:{
+                            my_list.insert_end(tem);
+                            cin.get();
+                            cout<<"按回车继续"<<endl;
+                            cin.get();
+                            system("clear");
+                            break;
+                        }
+                        case 3:{
+                            cout<<"请输入前插同学的ID"<<endl;
+                            cin>>c;
+                            my_list.insert_before(c,tem);
+                            cin.get();
+                            cout<<"按回车继续"<<endl;
+                            cin.get();
+                            system("clear");
+                            break;
+                        }
+                        case 4:{
+                            cout<<"请输入后插同学的ID"<<endl;
+                            cin>>c;
+                            my_list.insert_after(c,tem);
+                            cin.get();
+                            cout<<"按回车继续"<<endl;
+                            cin.get();
+                            system("clear");
+                            break;
+                        }
+                        case 0:{
+                            cin.get();
+                            cout<<"按回车继续"<<endl;
+                            cin.get();
+                            system("clear");
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            case 2:{
+                int w2=1;
+
+                while(w2){
+                    cout<<"=====删除学生界面====="<<endl;
+                    cout<<"头删学生请按1"<<endl;
+                    cout<<"尾删学生请按2"<<endl;
+                    cout<<"中删学生请按3"<<endl;
+                    cout<<"返回上一级请按0"<<endl;
+                    cin>>w2;
+                    switch(w2){
+                        case 1:{
+                            my_list.delete_head();
+                            cin.get();
+                            cout<<"按回车继续"<<endl;
+                            cin.get();
+                            system("clear");
+                            break;
+                        }
+                        case 2:{
+                            my_list.delete_end();
+                            cin.get();
+                            cout<<"按回车继续"<<endl;
+                            cin.get();
+                            system("clear");
+                            break;
+                        }
+                        case 3:{
+                            string c;
+                            cout<<"请输入删除同学的id"<<endl;
+                            cin>>c;
+                            my_list.delete_middle(c);
+                            cin.get();
+                            cout<<"按回车继续"<<endl;
+                            cin.get();
+                            system("clear");
+                            break;
+                        }
+                        case 0:{
+                            cin.get();
+                            cout<<"按回车继续"<<endl;
+                            cin.get();
+                            system("clear");
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            case 3:{
+                int w3=1;
+
+                while(w3){
+                    cout<<"=====查询学生界面====="<<endl;
+                    cout<<"全部查询请按1"<<endl;
+                    cout<<"个人查询请按2"<<endl;
+                    cout<<"返回上一级请按0"<<endl;
+                    cin>>w3;
+                    switch(w3){
+                        case 1:{
+                            my_list.print_all();
+                            cin.get();
+                            cout<<"按回车继续"<<endl;
+                            cin.get();
+                            system("clear");
+                            break;
+                        }
+                        case 2:{
+                            string c;
+                            cout<<"请输入查找同学的id"<<endl;
+                            cin>>c;
+                            my_list.print_single(c);
+                            cin.get();
+                            cout<<"按回车继续"<<endl;
+                            cin.get();
+                            system("clear");
+                            break;
+                        }
+                        case 0:{
+                            cin.get();
+                            cout<<"按回车继续"<<endl;
+                            cin.get();
+                            system("clear");
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            case 0:{
+                cout<<"感谢使用，祝你天天开心"<<endl;
+                break;
+            }
+        }
+    }
+}
